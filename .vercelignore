@@ -10,3 +10,7 @@ scrape_all_40.sh
 DUPR_ALGORITHM_*.md
 *.md
 !README.md
+api/
+*.pkl
+requirements.txt
+render.yaml
