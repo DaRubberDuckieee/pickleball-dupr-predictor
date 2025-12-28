@@ -10,7 +10,9 @@ CORS(app)
 # Load the model
 model_path = os.path.join(os.path.dirname(__file__), '..', 'dupr_model.pkl')
 with open(model_path, 'rb') as f:
-    model = pickle.load(f)
+    data = pickle.load(f)
+    # Extract model from tuple if needed
+    model = data[0] if isinstance(data, tuple) else data
 
 # Feature order matches deep_analysis.py 'All_Features'
 FEATURES = ['won', 'rating_diff', 'score_margin', 'total_points', 'partner_diff', 'team_vs_opp', 
