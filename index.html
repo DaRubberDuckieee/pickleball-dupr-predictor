@@ -314,7 +314,7 @@
                 // Call API endpoint (use environment-specific URL)
                 const apiUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:8080/predict'
-                    : 'https://dupr-predictor-api.onrender.com/predict';
+                    : 'https://pickleball-dupr-predictor.onrender.com/predict';
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
