@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUPR Rating Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .team {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .team h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        .player {
+            margin-bottom: 20px;
+        }
+        
+        .player:last-child {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .score-section {
+            background: #fff3cd;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #ffc107;
+        }
+        
+        .score-section h2 {
+            color: #856404;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .score-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results h2 {
+            color: #155724;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .result-player {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .result-player h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .rating-change {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .rating-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .change-value {
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+        
+        .change-positive {
+            color: #28a745;
+            background: #d4edda;
+        }
+        
+        .change-negative {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .change-neutral {
+            color: #6c757d;
+            background: #e9ecef;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #0d47a1;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏓 DUPR Rating Predictor</h1>
+        <p class="subtitle">Based on reverse-engineered algorithm from 1,711 matches (35 players)</p>
+        
+        <div class="teams">
+            <div class="team">
+                <h2>Your Team</h2>
+                <div class="player">
+                    <label for="player1">Your Rating</label>
+                    <input type="number" id="player1" step="0.001" min="0" max="10" placeholder="e.g., 4.267">
+                </div>
+                <div class="player">
+                    <label for="player2">Partner's Rating</label>
+                    <input type="number" id="player2" step="0.001" min="0" max="10" placeholder="e.g., 3.631">
+                </div>
+            </div>
+            
+            <div class="team">
+                <h2>Opponent Team</h2>
+                <div class="player">
+                    <label for="opponent1">Opponent 1 Rating</label>
+                    <input type="number" id="opponent1" step="0.001" min="0" max="10" placeholder="e.g., 3.729">
+                </div>
+                <div class="player">
+                    <label for="opponent2">Opponent 2 Rating</label>
+                    <input type="number" id="opponent2" step="0.001" min="0" max="10" placeholder="e.g., 4.005">
+                </div>
+            </div>
+        </div>
+        
+        <div class="score-section">
+            <h2>Match Score</h2>
+            <div class="score-inputs">
+                <div>
+                    <label for="yourScore">Your Team Score</label>
+                    <input type="number" id="yourScore" min="0" max="25" placeholder="e.g., 11">
+                </div>
+                <div>
+                    <label for="opponentScore">Opponent Score</label>
+                    <input type="number" id="opponentScore" min="0" max="25" placeholder="e.g., 14">
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="predictRatings()">Predict Rating Changes</button>
+        
+        <div class="results" id="results">
+            <h2>Predicted Rating Changes</h2>
+            <div class="result-grid" id="resultGrid"></div>
+            <div class="info-box">
+                <strong>Note:</strong> This predictor uses the reverse-engineered algorithm with K-factors based on rating levels. 
+                Actual DUPR may use additional factors (match recency, rating confidence, etc.) not captured in our model.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function predictRatingChange(playerRating, partnerRating, opp1Rating, opp2Rating, yourScore, opponentScore) {
+            // Calculate opponent average (what this player is playing against)
+            const opponentAvg = (opp1Rating + opp2Rating) / 2;
+            
+            // Calculate rating differential for THIS PLAYER vs opponent average
+            const ratingDiff = playerRating - opponentAvg;
+            
+            // Determine if won
+            const won = yourScore > opponentScore ? 1 : 0;
+            
+            // Calculate score margin
+            const scoreMargin = yourScore - opponentScore;
+            const totalPointMargin = Math.abs(scoreMargin);
+            
+            // Core regression formula from analysis (using individual player rating):
+            // rating_change = -0.044 + 0.019×(won) - 0.473×(rating_diff) + 0.005×(score_margin) + 0.009×(total_point_margin)
+            let change = -0.044 + 
+                        (0.019 * won) - 
+                        (0.473 * ratingDiff) + 
+                        (0.005 * scoreMargin) + 
+                        (0.009 * totalPointMargin);
+            
+            // Zero-change threshold for perfectly even matches
+            if (Math.abs(ratingDiff) < 0.05 && Math.abs(scoreMargin) < 3) {
+                change = 0.0;
+            }
+            
+            // DUPR rounds to nearest 0.001
+            change = Math.round(change * 1000) / 1000;
+            
+            return change;
+        }
+        
+        function predictRatings() {
+            // Get inputs
+            const player1 = parseFloat(document.getElementById('player1').value);
+            const player2 = parseFloat(document.getElementById('player2').value);
+            const opponent1 = parseFloat(document.getElementById('opponent1').value);
+            const opponent2 = parseFloat(document.getElementById('opponent2').value);
+            const yourScore = parseInt(document.getElementById('yourScore').value);
+            const opponentScore = parseInt(document.getElementById('opponentScore').value);
+            
+            // Validate inputs
+            if (isNaN(player1) || isNaN(player2) || isNaN(opponent1) || isNaN(opponent2) || isNaN(yourScore) || isNaN(opponentScore)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+            
+            // Calculate rating changes using the regression formula
+            const player1Change = predictRatingChange(player1, player2, opponent1, opponent2, yourScore, opponentScore);
+            const player2Change = predictRatingChange(player2, player1, opponent1, opponent2, yourScore, opponentScore);
+            const opponent1Change = predictRatingChange(opponent1, opponent2, player1, player2, opponentScore, yourScore);
+            const opponent2Change = predictRatingChange(opponent2, opponent1, player1, player2, opponentScore, yourScore);
+            
+            // Display results
+            const resultGrid = document.getElementById('resultGrid');
+            resultGrid.innerHTML = `
+                <div class="result-player">
+                    <h3>You</h3>
+                    <div class="rating-change">
+                        <span>Before:</span>
+                        <span class="rating-value">${player1.toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>After:</span>
+                        <span class="rating-value">${(player1 + player1Change).toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>Change:</span>
+                        <span class="change-value ${getChangeClass(player1Change)}">${formatChange(player1Change)}</span>
+                    </div>
+                </div>
+                
+                <div class="result-player">
+                    <h3>Your Partner</h3>
+                    <div class="rating-change">
+                        <span>Before:</span>
+                        <span class="rating-value">${player2.toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>After:</span>
+                        <span class="rating-value">${(player2 + player2Change).toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>Change:</span>
+                        <span class="change-value ${getChangeClass(player2Change)}">${formatChange(player2Change)}</span>
+                    </div>
+                </div>
+                
+                <div class="result-player">
+                    <h3>Opponent 1</h3>
+                    <div class="rating-change">
+                        <span>Before:</span>
+                        <span class="rating-value">${opponent1.toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>After:</span>
+                        <span class="rating-value">${(opponent1 + opponent1Change).toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>Change:</span>
+                        <span class="change-value ${getChangeClass(opponent1Change)}">${formatChange(opponent1Change)}</span>
+                    </div>
+                </div>
+                
+                <div class="result-player">
+                    <h3>Opponent 2</h3>
+                    <div class="rating-change">
+                        <span>Before:</span>
+                        <span class="rating-value">${opponent2.toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>After:</span>
+                        <span class="rating-value">${(opponent2 + opponent2Change).toFixed(3)}</span>
+                    </div>
+                    <div class="rating-change">
+                        <span>Change:</span>
+                        <span class="change-value ${getChangeClass(opponent2Change)}">${formatChange(opponent2Change)}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function formatChange(change) {
+            return (change >= 0 ? '+' : '') + change.toFixed(3);
+        }
+        
+        function getChangeClass(change) {
+            if (Math.abs(change) < 0.001) return 'change-neutral';
+            return change > 0 ? 'change-positive' : 'change-negative';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUPR Rating Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%
+;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .team {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .team h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        .player {
+            margin-bottom: 20px;
+        }
+        
+        .player:last-child {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .score-section {
+            background: #fff3cd;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #ffc107;
+        }
+        
+        .score-section h2 {
+            color: #856404;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .score-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results h2 {
+            color: #155724;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .result-player {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .result-player h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .rating-change {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .rating-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .change-value {
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+        
+        .change-positive {
+            color: #28a745;
+            background: #d4edda;
+        }
+        
+        .change-negative {
+            color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .change-neutral {
+            color: #6c757d;
+            background: #e9ecef;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #0d47a1;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .teams, .score-inputs, .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏓 DUPR Rating Predictor</h1>
+        <p class="subtitle">Based on reverse-engineered algorithm from 1,711 matches (35 players)</p>
+        
+        <div class="teams">
+            <div class="team">
+                <h2>Your Team</h2>
+                <div class="player">
+                    <label for="player1">Your Rating</label>
+                    <input type="number" id="player1" step="0.001" min="0" max="10" placeholder="e.g., 4.267">
+                </div>
+                <div class="player">
+                    <label for="player2">Partner's Rating</label>
+                    <input type="number" id="player2" step="0.001" min="0" max="10" placeholder="e.g., 3.631">
+                </div>
+            </div>
+            
+            <div class="team">
+                <h2>Opponent Team</h2>
+                <div class="player">
+                    <label for="opponent1">Opponent 1 Rating</label>
+                    <input type="number" id="opponent1" step="0.001" min="0" max="10" placeholder="e.g., 3.729">
+                </div>
+                <div class="player">
+                    <label for="opponent2">Opponent 2 Rating</label>
+                    <input type="number" id="opponent2" step="0.001" min="0" max="10" placeholder="e.g., 4.005">
+                </div>
+            </div>
+        </div>
+        
+        <div class="score-section">
+            <h2>Match Score</h2>
+            <div class="score-inputs">
+                <div>
+                    <label for="yourScore">Your Team Score</label>
+                    <input type="number" id="yourScore" min="0" max="25" placeholder="e.g., 11">
+                </div>
+                <div>
+                    <label for="opponentScore">Opponent Score</label>
+                    <input type="number" id="opponentScore" min="0" max="25" placeholder="e.g., 14">
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="predictRatings()">Predict Rating Changes</button>
+        
+        <div class="results" id="results">
+            <h2>Predicted Rating Changes</h2>
+            <div class="result-grid" id="resultGrid"></div>
+            <div class="info-box">
+                <strong>Algorithm Details:</strong>
+                Gradient Boosting machine learning model with 14 features including rating squared, partner differential, opponent spread, and ELO surprise factor. Trained on 35 players.
+                <br><br>
+                Based on analysis of 7,972 player-match records. <strong>R² = 0.86</strong>, MAE = 0.11 points.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function predictRatings() {
+            const player1 = parseFloat(document.getElementById('player1').value);
+            const player2 = parseFloat(document.getElementById('player2').value);
+            const opponent1 = parseFloat(document.getElementById('opponent1').value);
+            const opponent2 = parseFloat(document.getElementById('opponent2').value);
+            const yourScore = parseInt(document.getElementById('yourScore').value);
+            const opponentScore = parseInt(document.getElementById('opponentScore').value);
+            
+            if (isNaN(player1) || isNaN(player2) || isNaN(opponent1) || isNaN(opponent2) || isNaN(yourScore) || isNaN(opponentScore)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+            
+            // Show loading state
+            const resultGrid = document.getElementById('resultGrid');
+            resultGrid.innerHTML = '<p style="text-align: center; color: #666;">Calculating with ML model...</p>';
+            document.getElementById('results').classList.add('show');
+            
+            try {
+                // Call API endpoint (use environment-specific URL)
+                const apiUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8080/predict'
+                    : 'https://dupr-predictor-api.onrender.com/predict';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        team1_player1: player1,
+                        team1_player2: player2,
+                        team2_player1: opponent1,
+                        team2_player2: opponent2,
+                        team1_score: yourScore,
+                        team2_score: opponentScore
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                resultGrid.innerHTML = `
+                    <div class="result-player">
+                        <h3>You</h3>
+                        <div class="rating-change">
+                            <span>Before:</span>
+                            <span class="rating-value">${data.team1.player1.rating_before.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>After:</span>
+                            <span class="rating-value">${data.team1.player1.rating_after.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>Change:</span>
+                            <span class="change-value ${getChangeClass(data.team1.player1.rating_change)}">${formatChange(data.team1.player1.rating_change)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-player">
+                        <h3>Your Partner</h3>
+                        <div class="rating-change">
+                            <span>Before:</span>
+                            <span class="rating-value">${data.team1.player2.rating_before.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>After:</span>
+                            <span class="rating-value">${data.team1.player2.rating_after.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>Change:</span>
+                            <span class="change-value ${getChangeClass(data.team1.player2.rating_change)}">${formatChange(data.team1.player2.rating_change)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-player">
+                        <h3>Opponent 1</h3>
+                        <div class="rating-change">
+                            <span>Before:</span>
+                            <span class="rating-value">${data.team2.player1.rating_before.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>After:</span>
+                            <span class="rating-value">${data.team2.player1.rating_after.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>Change:</span>
+                            <span class="change-value ${getChangeClass(data.team2.player1.rating_change)}">${formatChange(data.team2.player1.rating_change)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-player">
+                        <h3>Opponent 2</h3>
+                        <div class="rating-change">
+                            <span>Before:</span>
+                            <span class="rating-value">${data.team2.player2.rating_before.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>After:</span>
+                            <span class="rating-value">${data.team2.player2.rating_after.toFixed(3)}</span>
+                        </div>
+                        <div class="rating-change">
+                            <span>Change:</span>
+                            <span class="change-value ${getChangeClass(data.team2.player2.rating_change)}">${formatChange(data.team2.player2.rating_change)}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultGrid.innerHTML = `<p style="text-align: center; color: #dc3545;">Error: ${error.message}. Please try again.</p>`;
+            }
+            
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function formatChange(change) {
+            return (change >= 0 ? '+' : '') + change.toFixed(3);
+        }
+        
+        function getChangeClass(change) {
+            if (Math.abs(change) < 0.001) return 'change-neutral';
+            return change > 0 ? 'change-positive' : 'change-negative';
+        }
+    </script>
+</body>
+</html>

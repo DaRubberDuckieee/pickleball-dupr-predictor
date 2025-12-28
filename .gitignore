@@ -1,0 +1,32 @@
+# Virtual Environment
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Data files
+*.csv
+*.json
+*.xlsx
+
+# Debug files
+debug_*.py
+test_*.py
+rendered_*.html
+rendered_*.txt
+page_sample.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+.vercel
