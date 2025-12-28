@@ -42,6 +42,12 @@ def predict():
         team1_score = int(data['team1_score'])
         team2_score = int(data['team2_score'])
         
+        # Validate scores
+        if team1_score == team2_score:
+            return jsonify({'error': 'Tie games are not valid in pickleball. One team must win.'}), 400
+        if team1_score < 0 or team2_score < 0:
+            return jsonify({'error': 'Scores must be non-negative.'}), 400
+        
         # Calculate match outcome
         team1_won = 1 if team1_score > team2_score else 0
         team2_won = 1 - team1_won
