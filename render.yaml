@@ -3,7 +3,7 @@ services:
     name: dupr-predictor-api
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn api.app:app
+    startCommand: gunicorn api.app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
