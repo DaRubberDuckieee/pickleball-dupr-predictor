@@ -1,5 +1,5 @@
 flask==3.0.0
 flask-cors==4.0.0
-scikit-learn==1.5.2
-numpy==1.26.4
+scikit-learn==1.6.1
+numpy==2.2.1
 gunicorn==21.2.0
