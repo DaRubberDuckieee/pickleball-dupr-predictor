@@ -224,6 +224,65 @@
             display: block;
             margin-bottom: 5px;
         }
+        
+        .model-selector {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #2196F3;
+        }
+        
+        .model-selector h3 {
+            color: #1565c0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .model-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .model-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .model-option:hover {
+            border-color: #2196F3;
+        }
+        
+        .model-option input[type="radio"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .model-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .model-label strong {
+            color: #1565c0;
+            font-size: 14px;
+        }
+        
+        .model-label small {
+            color: #666;
+            font-size: 12px;
+        }
 
         @media (max-width: 768px) {
             .teams, .score-inputs, .result-grid {
@@ -277,6 +336,26 @@
             </div>
         </div>
         
+        <div class="model-selector">
+            <h3>Prediction Model</h3>
+            <div class="model-options">
+                <label class="model-option">
+                    <input type="radio" name="model" value="1" checked>
+                    <span class="model-label">
+                        <strong>Model 1: Ridge Regression</strong>
+                        <small>Best for balanced matches (R²=0.30, MAE=0.023)</small>
+                    </span>
+                </label>
+                <label class="model-option">
+                    <input type="radio" name="model" value="3">
+                    <span class="model-label">
+                        <strong>Model 3: Gradient Boosting</strong>
+                        <small>100 decision trees (R²=0.47, MAE=0.020)</small>
+                    </span>
+                </label>
+            </div>
+        </div>
+        
         <button onclick="predictRatings()">Predict Rating Changes</button>
         
         <div class="results" id="results">
@@ -311,6 +390,9 @@
             document.getElementById('results').classList.add('show');
             
             try {
+                // Get selected model
+                const selectedModel = document.querySelector('input[name="model"]:checked').value;
+                
                 // Call API endpoint (use environment-specific URL)
                 const apiUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:8080/predict'
@@ -326,7 +408,8 @@
                         team2_player1: opponent1,
                         team2_player2: opponent2,
                         team1_score: yourScore,
-                        team2_score: opponentScore
+                        team2_score: opponentScore,
+                        model: selectedModel
                     })
                 });
                 

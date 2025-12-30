@@ -7,25 +7,16 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Load the model
-model_path = os.path.join(os.path.dirname(__file__), '..', 'dupr_model.pkl')
-with open(model_path, 'rb') as f:
-    data = pickle.load(f)
-    # Extract model, features, and deflation constant
-    if isinstance(data, tuple):
-        if len(data) == 3:
-            model, features, deflation = data
-        elif len(data) == 2:
-            model, features = data
-            deflation = 0.0
+# Load both models
+models = {}
+for model_num in [1, 3]:
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'models', f'model{model_num}_{"ridge" if model_num == 1 else "gb_balanced"}.pkl')
+    with open(model_path, 'rb') as f:
+        data = pickle.load(f)
+        if isinstance(data, tuple) and len(data) == 3:
+            models[model_num] = {'model': data[0], 'features': data[1], 'deflation': data[2]}
         else:
-            model = data[0]
-            features = None
-            deflation = 0.0
-    else:
-        model = data
-        features = None
-        deflation = 0.0
+            models[model_num] = {'model': data, 'features': None, 'deflation': 0.0}
 
 # Feature order matches deep_analysis.py 'All_Features'
 FEATURES = ['won', 'rating_diff', 'score_margin', 'total_points', 'partner_diff', 'team_vs_opp', 
@@ -44,6 +35,15 @@ def home():
 def predict():
     try:
         data = request.json
+        
+        # Get model selection (default to 1)
+        model_num = int(data.get('model', 1))
+        if model_num not in models:
+            model_num = 1
+        
+        model_data = models[model_num]
+        model = model_data['model']
+        deflation = model_data['deflation']
         
         # Extract player ratings
         team1_player1 = float(data['team1_player1'])

@@ -1,0 +1,33 @@
+graph TD
+    N0["score_margin ≤ 7.50?"]
+    N0 -->|Yes| N1
+    N1["team_vs_opp ≤ -0.26?"]
+    N1 -->|Yes| N2
+    N2["total_points ≤ 0.50?"]
+    N2 -->|Yes| N3
+    N3["Predict: -0.045"]
+    style N3 fill:#ffffcc
+    N2 -->|No| N4
+    N4["Predict: +0.003"]
+    style N4 fill:#ffffcc
+    N1 -->|No| N5
+    N5["score_margin ≤ -10.50?"]
+    N5 -->|Yes| N6
+    N6["Predict: -0.020"]
+    style N6 fill:#ffffcc
+    N5 -->|No| N7
+    N7["Predict: -0.002"]
+    style N7 fill:#ffffcc
+    N0 -->|No| N8
+    N8["team_vs_opp ≤ -0.73?"]
+    N8 -->|Yes| N9
+    N9["Predict: +0.128"]
+    style N9 fill:#ccffcc
+    N8 -->|No| N10
+    N10["opp_spread ≤ 0.00?"]
+    N10 -->|Yes| N11
+    N11["Predict: +0.037"]
+    style N11 fill:#ffffcc
+    N10 -->|No| N12
+    N12["Predict: +0.004"]
+    style N12 fill:#ffffcc

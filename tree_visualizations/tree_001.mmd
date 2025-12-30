@@ -1,0 +1,28 @@
+graph TD
+    N0["surprise ≤ -0.35?"]
+    N0 -->|Yes| N1
+    N1["opp_avg ≤ 2.68?"]
+    N1 -->|Yes| N2
+    N2["Predict: -0.336"]
+    style N2 fill:#ffcccc
+    N1 -->|No| N3
+    N3["team_vs_opp ≤ -0.05?"]
+    N3 -->|Yes| N4
+    N4["Predict: -0.011"]
+    style N4 fill:#ffffcc
+    N3 -->|No| N5
+    N5["Predict: -0.034"]
+    style N5 fill:#ffffcc
+    N0 -->|No| N6
+    N6["player_rating ≤ 2.56?"]
+    N6 -->|Yes| N7
+    N7["Predict: +0.369"]
+    style N7 fill:#ccffcc
+    N6 -->|No| N8
+    N8["team_vs_opp ≤ 0.05?"]
+    N8 -->|Yes| N9
+    N9["Predict: +0.034"]
+    style N9 fill:#ffffcc
+    N8 -->|No| N10
+    N10["Predict: +0.011"]
+    style N10 fill:#ffffcc
