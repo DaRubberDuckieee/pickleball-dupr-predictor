@@ -48,7 +48,7 @@ class DUPRScraper:
             except:
                 pass
     
-    def scrape_player_rating_history(self, player_url: str, start_page: int = 1, max_pages: Optional[int] = None) -> pd.DataFrame:
+    def scrape_player_rating_history(self, player_url: str, start_page: int = 1, max_pages: Optional[int] = None, output_file: Optional[str] = None) -> pd.DataFrame:
         """
         Scrape all rating history for a player
         
@@ -56,6 +56,7 @@ class DUPRScraper:
             player_url: Full URL to player's rating history page
             start_page: Page number to start scraping from (default: 1)
             max_pages: Maximum number of pages to scrape (None for all pages)
+            output_file: If provided, save incrementally after each page
             
         Returns:
             DataFrame with all match data
@@ -117,6 +118,11 @@ class DUPRScraper:
                 self._empty_page_count = 0
                 all_matches.extend(matches)
                 print(f"Found {len(matches)} matches")
+                
+                # Save incrementally if output file specified
+                if output_file and all_matches:
+                    df_temp = pd.DataFrame(all_matches)
+                    df_temp.to_csv(output_file, index=False)
             
             page += 1
             pages_scraped += 1
@@ -445,6 +451,17 @@ class DUPRScraper:
             # Skip matches with insufficient data
             return None
         
+        # Filter out matches with any rating change > 1.0 (outliers)
+        rating_changes = [
+            abs(structured['team1_player1_rating_change']),
+            abs(structured['team1_player2_rating_change']),
+            abs(structured['team2_player1_rating_change']),
+            abs(structured['team2_player2_rating_change'])
+        ]
+        
+        if any(change > 1.0 for change in rating_changes):
+            return None  # Skip this match
+        
         return structured
 
 
@@ -465,7 +482,8 @@ def main():
         df = scraper.scrape_player_rating_history(
             args.player_url, 
             start_page=args.start_page,
-            max_pages=args.max_pages
+            max_pages=args.max_pages,
+            output_file=args.output
         )
         
         if not df.empty:
