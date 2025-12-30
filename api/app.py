@@ -11,8 +11,21 @@ CORS(app)
 model_path = os.path.join(os.path.dirname(__file__), '..', 'dupr_model.pkl')
 with open(model_path, 'rb') as f:
     data = pickle.load(f)
-    # Extract model from tuple if needed
-    model = data[0] if isinstance(data, tuple) else data
+    # Extract model, features, and deflation constant
+    if isinstance(data, tuple):
+        if len(data) == 3:
+            model, features, deflation = data
+        elif len(data) == 2:
+            model, features = data
+            deflation = 0.0
+        else:
+            model = data[0]
+            features = None
+            deflation = 0.0
+    else:
+        model = data
+        features = None
+        deflation = 0.0
 
 # Feature order matches deep_analysis.py 'All_Features'
 FEATURES = ['won', 'rating_diff', 'score_margin', 'total_points', 'partner_diff', 'team_vs_opp', 
@@ -133,6 +146,9 @@ def predict():
         # Predict for all players
         X = np.array([p['features'] for p in players])
         predictions = model.predict(X)
+        
+        # Add back DUPR's deflation constant
+        predictions = predictions + deflation
         
         # Round to 3 decimal places like DUPR
         predictions = np.round(predictions, 3)
