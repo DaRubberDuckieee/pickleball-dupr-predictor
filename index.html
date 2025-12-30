@@ -337,17 +337,17 @@
         </div>
         
         <div class="model-selector">
-            <h3>Prediction Model</h3>
+            <h3>Prediction Model (Auto-Selected)</h3>
             <div class="model-options">
                 <label class="model-option">
-                    <input type="radio" name="model" value="1" checked>
+                    <input type="radio" name="model" value="1" id="model1">
                     <span class="model-label">
                         <strong>Model 1: Ridge Regression</strong>
                         <small>Best for balanced matches (R²=0.30, MAE=0.023)</small>
                     </span>
                 </label>
                 <label class="model-option">
-                    <input type="radio" name="model" value="3">
+                    <input type="radio" name="model" value="3" id="model3" checked>
                     <span class="model-label">
                         <strong>Model 3: Gradient Boosting</strong>
                         <small>100 decision trees (R²=0.47, MAE=0.020)</small>
@@ -361,11 +361,8 @@
         <div class="results" id="results">
             <h2>Predicted Rating Changes</h2>
             <div class="result-grid" id="resultGrid"></div>
-            <div class="info-box">
-                <strong>Algorithm Details:</strong>
-                Gradient Boosting machine learning model with 14 features including rating squared, partner differential, opponent spread, and ELO surprise factor. Trained on 35 players.
-                <br><br>
-                Based on analysis of 7,972 player-match records. <strong>R² = 0.86</strong>, MAE = 0.11 points.
+            <div class="info-box" id="modelUsedInfo">
+                <strong>Model Used:</strong> <span id="modelUsedText"></span>
             </div>
         </div>
     </div>
@@ -384,14 +381,36 @@
                 return;
             }
             
+            // Auto-select model based on match balance
+            const teamAvg = (player1 + player2) / 2;
+            const oppAvg = (opponent1 + opponent2) / 2;
+            const ratingSpread = Math.max(player1, player2, opponent1, opponent2) - Math.min(player1, player2, opponent1, opponent2);
+            const teamDiff = Math.abs(teamAvg - oppAvg);
+            const scoreMargin = Math.abs(yourScore - opponentScore);
+            
+            // Balanced match: all ratings close + close score
+            const isBalanced = ratingSpread < 0.3 && teamDiff < 0.2 && scoreMargin <= 3;
+            
+            let selectedModel;
+            let modelReason;
+            if (isBalanced) {
+                selectedModel = '1';
+                modelReason = 'Model 1 (Ridge Regression) - Match is balanced: all players within 0.3 rating and close score. This model is more accurate for balanced recreational matches (±0.012 vs real DUPR ±0.001).';
+                document.getElementById('model1').checked = true;
+            } else {
+                selectedModel = '3';
+                modelReason = 'Model 3 (Gradient Boosting) - Match has rating differences or unbalanced score. This model uses 100 decision trees to handle complex scenarios (R²=0.47, MAE=0.020).';
+                document.getElementById('model3').checked = true;
+            }
+            
             // Show loading state
             const resultGrid = document.getElementById('resultGrid');
             resultGrid.innerHTML = '<p style="text-align: center; color: #666;">Calculating with ML model...</p>';
             document.getElementById('results').classList.add('show');
             
             try {
-                // Get selected model
-                const selectedModel = document.querySelector('input[name="model"]:checked').value;
+                // Use auto-selected model (or user override)
+                const userSelected = document.querySelector('input[name="model"]:checked').value;
                 
                 // Call API endpoint (use environment-specific URL)
                 const apiUrl = window.location.hostname === 'localhost' 
@@ -409,7 +428,7 @@
                         team2_player2: opponent2,
                         team1_score: yourScore,
                         team2_score: opponentScore,
-                        model: selectedModel
+                        model: userSelected
                     })
                 });
                 
@@ -418,6 +437,9 @@
                 }
                 
                 const data = await response.json();
+                
+                // Update model info
+                document.getElementById('modelUsedText').textContent = modelReason;
                 
                 // Display results
                 resultGrid.innerHTML = `
