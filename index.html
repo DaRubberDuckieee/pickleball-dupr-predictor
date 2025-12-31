@@ -314,21 +314,24 @@
             padding: 14px;
             background: rgba(0, 0, 0, 0.4);
             border-radius: 8px;
-            cursor: pointer;
+            cursor: not-allowed;
             transition: all 0.2s;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            opacity: 0.6;
         }
         
         .model-option:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.4);
         }
         
         .model-option input[type="radio"] {
             margin-right: 10px;
             width: 16px;
             height: 16px;
-            cursor: pointer;
+            cursor: not-allowed;
+            pointer-events: none;
         }
         
         .model-label {
