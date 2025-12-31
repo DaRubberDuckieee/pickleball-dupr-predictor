@@ -3,20 +3,32 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 import os
+import re
+from urllib.parse import urlparse
+import requests
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 CORS(app)
 
-# Load both models
-models = {}
-for model_num in [1, 3]:
-    model_path = os.path.join(os.path.dirname(__file__), '..', 'models', f'model{model_num}_{"ridge" if model_num == 1 else "gb_balanced"}.pkl')
-    with open(model_path, 'rb') as f:
-        data = pickle.load(f)
-        if isinstance(data, tuple) and len(data) == 3:
-            models[model_num] = {'model': data[0], 'features': data[1], 'deflation': data[2]}
-        else:
-            models[model_num] = {'model': data, 'features': None, 'deflation': 0.0}
+# Lazy-load models only when needed (so scraping endpoint works without scikit-learn)
+models = None
+
+def load_models():
+    global models
+    if models is not None:
+        return models
+    loaded = {}
+    for model_num in [1, 3]:
+        model_path = os.path.join(os.path.dirname(__file__), '..', 'models', f'model{model_num}_{"ridge" if model_num == 1 else "gb_balanced"}.pkl')
+        with open(model_path, 'rb') as f:
+            data = pickle.load(f)
+            if isinstance(data, tuple) and len(data) == 3:
+                loaded[model_num] = {'model': data[0], 'features': data[1], 'deflation': data[2]}
+            else:
+                loaded[model_num] = {'model': data, 'features': None, 'deflation': 0.0}
+    models = loaded
+    return models
 
 # Feature order matches deep_analysis.py 'All_Features'
 FEATURES = ['won', 'rating_diff', 'score_margin', 'total_points', 'partner_diff', 'team_vs_opp', 
@@ -28,8 +40,104 @@ def home():
     return jsonify({
         "message": "DUPR Rating Predictor API",
         "model": "Gradient Boosting (R² = 0.86)",
-        "endpoint": "/predict"
+        "endpoints": {
+            "/predict": "Predict DUPR rating changes",
+            "/scrape_dupr": "Scrape DUPR rating from pickleball.com URL"
+        }
     })
+
+@app.route('/scrape_dupr', methods=['POST'])
+def scrape_dupr():
+    try:
+        data = request.json
+        url = data.get('url', '').strip()
+        
+        if not url:
+            return jsonify({'error': 'URL is required'}), 400
+        
+        # Validate URL format
+        if 'pickleball.com/players/' not in url:
+            return jsonify({'error': 'Invalid pickleball.com player URL'}), 400
+        
+        # Extract player slug
+        match = re.search(r'pickleball\.com/players/([\w-]+)', url)
+        if not match:
+            return jsonify({'error': 'Could not extract player name from URL'}), 400
+        
+        player_slug = match.group(1)
+        
+        # Use rating-history URL where ratings are publicly visible
+        rating_history_url = f'https://pickleball.com/players/{player_slug}/rating-history'
+        
+        # Fetch the page
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(rating_history_url, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            return jsonify({'error': f'Failed to fetch player page (status {response.status_code})'}), 400
+        
+        # Parse HTML
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extract DUPR rating from the rating history page
+        # Ratings are publicly visible on the rating-history page
+        # Look for the player's name and extract the rating that follows
+        
+        # Get all text from the page
+        page_text = soup.get_text()
+        
+        # Extract first and last name from player slug
+        name_parts = player_slug.replace('-', ' ').title()
+        
+        # Find the player's name and extract rating nearby
+        player_name_match = re.search(rf'{re.escape(name_parts)}[^\d]+(\d+\.\d{{3}})', page_text, re.IGNORECASE)
+        if player_name_match:
+            dupr_rating = float(player_name_match.group(1))
+            return jsonify({
+                'dupr_rating': dupr_rating,
+                'player_slug': player_slug,
+                'source': 'rating_history'
+            })
+        
+        # If we couldn't extract the rating, return an error
+        return jsonify({
+            'error': f'Could not find DUPR rating for player {player_slug}. The player may not have any match history.',
+            'player_slug': player_slug
+        }), 404
+        
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out while fetching player page'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+def fetch_dupr_rating_from_api(dupr_id):
+    """Attempt to fetch DUPR rating from DUPR's API or website"""
+    # Try mydupr.com API endpoints
+    api_urls = [
+        f'https://api.dupr.gg/player/{dupr_id}',
+        f'https://mydupr.com/api/player/{dupr_id}',
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+    }
+    
+    for api_url in api_urls:
+        try:
+            response = requests.get(api_url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                # Try to extract doubles rating
+                if 'doubles' in data:
+                    return float(data['doubles'])
+                if 'rating' in data and 'doubles' in data['rating']:
+                    return float(data['rating']['doubles'])
+        except:
+            continue
+    
+    return None
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -38,10 +146,11 @@ def predict():
         
         # Get model selection (default to 1)
         model_num = int(data.get('model', 1))
-        if model_num not in models:
+        models_dict = load_models()
+        if model_num not in models_dict:
             model_num = 1
         
-        model_data = models[model_num]
+        model_data = models_dict[model_num]
         model = model_data['model']
         deflation = model_data['deflation']
         
