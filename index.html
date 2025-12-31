@@ -509,7 +509,10 @@
             }
             
             const data = await response.json();
-            return data.dupr_rating;
+            return {
+                rating: data.dupr_rating,
+                playerName: data.player_name || null
+            };
         }
         
         async function processInput(fieldId, value) {
@@ -523,13 +526,13 @@
             // Check if it's a URL
             if (isPickleballURL(value)) {
                 if (!validateURL(value)) {
-                    showError(fieldId, 'Invalid pickleball.com URL format');
+                    showError(fieldId, 'Link is not valid');
                     return null;
                 }
                 
                 try {
-                    const rating = await fetchDUPRFromURL(value);
-                    return rating;
+                    const data = await fetchDUPRFromURL(value);
+                    return data.rating;
                 } catch (error) {
                     showError(fieldId, error.message);
                     return null;
@@ -759,14 +762,30 @@
             const value = event.target.value.trim();
             
             // Check if it's a pickleball URL
-            if (isPickleballURL(value) && validateURL(value)) {
+            if (isPickleballURL(value)) {
+                if (!validateURL(value)) {
+                    showError(fieldId, 'Link is not valid');
+                    return;
+                }
+                
                 // Show loading message
                 showLoadingMessage(fieldId, 'Grabbing DUPR...');
                 
                 try {
-                    const rating = await fetchDUPRFromURL(value);
+                    const data = await fetchDUPRFromURL(value);
                     // Replace the URL with the rating
-                    event.target.value = rating.toFixed(3);
+                    event.target.value = data.rating.toFixed(3);
+                    // Update the label with player name if available
+                    if (data.playerName) {
+                        const label = document.querySelector(`label[for="${fieldId}"]`);
+                        if (label) {
+                            // Store original label text
+                            if (!label.dataset.originalText) {
+                                label.dataset.originalText = label.textContent;
+                            }
+                            label.textContent = `${data.playerName}'s Rating`;
+                        }
+                    }
                     // Clear the loading message
                     clearError(fieldId);
                 } catch (error) {

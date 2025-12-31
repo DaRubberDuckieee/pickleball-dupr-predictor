@@ -82,21 +82,46 @@ def scrape_dupr():
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Extract DUPR rating from the rating history page
-        # Ratings are publicly visible on the rating-history page
-        # Look for the player's name and extract the rating that follows
-        
-        # Get all text from the page
         page_text = soup.get_text()
         
-        # Extract first and last name from player slug
+        # Extract player name from slug
         name_parts = player_slug.replace('-', ' ').title()
         
-        # Find the player's name and extract rating nearby
-        player_name_match = re.search(rf'{re.escape(name_parts)}[^\d]+(\d+\.\d{{3}})', page_text, re.IGNORECASE)
-        if player_name_match:
-            dupr_rating = float(player_name_match.group(1))
+        # Try multiple patterns to find the DUPR rating
+        # Pattern 1: Look for "Doubles ***** Singles **" which indicates the rating section
+        doubles_singles_match = re.search(r'Doubles\s+([\*\d\.]+)\s+Singles', page_text)
+        if doubles_singles_match:
+            rating_str = doubles_singles_match.group(1).replace('*', '')
+            # Now find the actual numeric rating nearby
+            rating_match = re.search(r'(\d+\.\d{3})', page_text[doubles_singles_match.start():doubles_singles_match.start()+200])
+            if rating_match:
+                dupr_rating = float(rating_match.group(1))
+                return jsonify({
+                    'dupr_rating': dupr_rating,
+                    'player_name': name_parts,
+                    'player_slug': player_slug,
+                    'source': 'rating_history'
+                })
+        
+        # Pattern 2: Look for player name followed by rating in match history
+        # Format: "Clayton Truex 34 | M | Kirkland, WA, USA 4.919"
+        name_rating_match = re.search(rf'{re.escape(name_parts)}[^\d]+\d+\s*\|[^\d]+(\d+\.\d{{3}})', page_text, re.IGNORECASE)
+        if name_rating_match:
+            dupr_rating = float(name_rating_match.group(1))
             return jsonify({
                 'dupr_rating': dupr_rating,
+                'player_name': name_parts,
+                'player_slug': player_slug,
+                'source': 'rating_history'
+            })
+        
+        # Pattern 3: Generic pattern - player name followed by a 3-decimal rating
+        generic_match = re.search(rf'{re.escape(name_parts)}[^\d]+(\d+\.\d{{3}})', page_text, re.IGNORECASE)
+        if generic_match:
+            dupr_rating = float(generic_match.group(1))
+            return jsonify({
+                'dupr_rating': dupr_rating,
+                'player_name': name_parts,
                 'player_slug': player_slug,
                 'source': 'rating_history'
             })
