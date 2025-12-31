@@ -467,9 +467,24 @@
                 document.getElementById('model3').checked = true;
             }
             
-            // Show loading state
+            // Show loading state with timer
             const resultGrid = document.getElementById('resultGrid');
-            resultGrid.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model.<br><strong style="color: #ffffff;">NOTE:</strong> If it\'s your first request, it will probably take ~1 min because I don\'t want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>';
+            const startTime = Date.now();
+            let timerInterval;
+            
+            function updateTimer() {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeStr = minutes > 0 
+                    ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+                    : `${seconds}s`;
+                    
+                resultGrid.innerHTML = `<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model... <strong style="color: #4ade80;">${timeStr}</strong><br><strong style="color: #ffffff;">NOTE:</strong> If it's your first request, it will probably take ~1 min because I don't want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>`;
+            }
+            
+            updateTimer(); // Initial call
+            timerInterval = setInterval(updateTimer, 1000);
             document.getElementById('results').classList.add('show');
             
             try {
@@ -501,6 +516,9 @@
                 }
                 
                 const data = await response.json();
+                
+                // Clear timer
+                clearInterval(timerInterval);
                 
                 // Update model info
                 document.getElementById('modelUsedText').textContent = modelReason;
@@ -572,6 +590,7 @@
                     </div>
                 `;
             } catch (error) {
+                clearInterval(timerInterval);
                 resultGrid.innerHTML = `<p style="text-align: center; color: #f87171;">Error: ${error.message}. Please try again.</p>`;
             }
             
