@@ -6,7 +6,7 @@
     <title>DUPR Rating Predictor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,39 +16,68 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0d0d0f;
+            background: #000000;
             min-height: 100vh;
-            padding: 24px;
+            padding: 48px 24px;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 50%, white, transparent),
+                radial-gradient(1px 1px at 66% 33%, white, transparent);
+            background-size: 200% 200%, 150% 150%, 250% 250%, 300% 300%, 180% 180%, 220% 220%, 160% 160%;
+            background-position: 0% 0%, 100% 100%, 50% 50%, 20% 80%, 80% 20%, 40% 60%, 60% 40%;
+            opacity: 0.4;
+            z-index: 0;
+            pointer-events: none;
         }
         
         .container {
-            background: #1a1a1d;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-            max-width: 880px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            max-width: 920px;
             width: 100%;
-            padding: 40px;
-            border: 1px solid #2a2a2d;
+            padding: 60px 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
         }
         
         h1 {
             color: #ffffff;
             text-align: center;
-            margin-bottom: 8px;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            font-size: 56px;
+            font-weight: 300;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
         }
         
         .subtitle {
             text-align: center;
-            color: #8b8b8b;
-            margin-bottom: 32px;
-            font-size: 13px;
-            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 48px;
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.02em;
         }
         
         .teams {
@@ -59,20 +88,20 @@
         }
         
         .team {
-            background: #232326;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #2a2a2d;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .team h2 {
-            color: #46d6b0;
-            margin-bottom: 16px;
-            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 18px;
             text-align: left;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: -0.01em;
         }
         
         .player {
@@ -85,46 +114,48 @@
         
         label {
             display: block;
-            color: #8b8b8b;
-            font-weight: 500;
-            margin-bottom: 6px;
-            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+            margin-bottom: 8px;
+            font-size: 13px;
+            letter-spacing: 0.01em;
         }
         
         input[type="number"] {
             width: 100%;
-            padding: 10px 12px;
-            background: #1a1a1d;
-            border: 1px solid #2a2a2d;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            font-size: 15px;
             color: #ffffff;
             font-family: 'Inter', sans-serif;
-            transition: all 0.15s;
+            transition: all 0.2s;
         }
         
         input[type="number"]:focus {
             outline: none;
-            border-color: #46d6b0;
-            box-shadow: 0 0 0 3px rgba(70, 214, 176, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
         
         .score-section {
-            background: #232326;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #2a2a2d;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .score-section h2 {
-            color: #46d6b0;
-            margin-bottom: 16px;
+            color: #ffffff;
+            margin-bottom: 20px;
             text-align: left;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 18px;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: -0.01em;
         }
         
         .score-inputs {
@@ -135,21 +166,23 @@
         
         button {
             width: 100%;
-            padding: 12px;
-            background: #46d6b0;
-            color: #0d0d0f;
+            padding: 16px;
+            background: #ffffff;
+            color: #000000;
             border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: all 0.2s;
             font-family: 'Inter', sans-serif;
+            letter-spacing: 0.01em;
         }
         
         button:hover {
-            background: #5de0bf;
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
         }
         
         button:active {
@@ -157,11 +190,11 @@
         }
         
         .results {
-            margin-top: 24px;
-            padding: 20px;
-            background: #232326;
-            border: 1px solid #2a2a2d;
-            border-radius: 8px;
+            margin-top: 32px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             display: none;
         }
         
@@ -170,11 +203,12 @@
         }
         
         .results h2 {
-            color: #46d6b0;
-            margin-bottom: 20px;
+            color: #ffffff;
+            margin-bottom: 24px;
             text-align: left;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
         }
         
         .result-grid {
@@ -184,87 +218,88 @@
         }
         
         .result-player {
-            background: #1a1a1d;
-            padding: 16px;
-            border-radius: 6px;
-            border-left: 3px solid #46d6b0;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .result-player h3 {
             color: #ffffff;
-            margin-bottom: 10px;
-            font-size: 13px;
-            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
         }
         
         .rating-change {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
-            margin-bottom: 6px;
-            color: #8b8b8b;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.5);
         }
         
         .rating-value {
-            font-weight: 600;
-            color: #46d6b0;
+            font-weight: 500;
+            color: #ffffff;
         }
         
         .change-value {
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
         }
         
         .change-positive {
-            color: #46d6b0;
-            background: rgba(70, 214, 176, 0.15);
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.15);
         }
         
         .change-negative {
-            color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.15);
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.15);
         }
         
         .change-neutral {
-            color: #8b8b8b;
-            background: rgba(139, 139, 139, 0.15);
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .info-box {
-            background: #232326;
-            border: 1px solid #2a2a2d;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 12px;
-            color: #8b8b8b;
-            line-height: 1.5;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
         }
         
         .info-box strong {
             color: #ffffff;
-            font-weight: 600;
+            font-weight: 500;
         }
         
         .model-selector {
-            background: #232326;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #2a2a2d;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .model-selector h3 {
-            color: #46d6b0;
-            margin-bottom: 12px;
-            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-size: 18px;
             text-align: left;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: -0.01em;
         }
         
         .model-options {
@@ -276,17 +311,17 @@
         .model-option {
             display: flex;
             align-items: center;
-            padding: 12px;
-            background: #1a1a1d;
-            border-radius: 6px;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.15s;
-            border: 1px solid #2a2a2d;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         
         .model-option:hover {
-            border-color: #46d6b0;
-            background: rgba(70, 214, 176, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
         }
         
         .model-option input[type="radio"] {
@@ -304,13 +339,13 @@
         
         .model-label strong {
             color: #ffffff;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
         }
         
         .model-label small {
-            color: #8b8b8b;
-            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
         }
 
         @media (max-width: 768px) {
@@ -322,7 +357,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏓 DUPR Rating Predictor</h1>
+        <h1>DUPR Rating Predictor</h1>
         <p class="subtitle">Based on reverse-engineered algorithm from 1,711 matches (35 players)</p>
         
         <div class="teams">
@@ -434,7 +469,7 @@
             
             // Show loading state
             const resultGrid = document.getElementById('resultGrid');
-            resultGrid.innerHTML = '<p style="text-align: center; color: #666;">Calculating with ML model...</p>';
+            resultGrid.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model.<br><strong style="color: #ffffff;">NOTE:</strong> If it\'s your first request, it will probably take ~1 min because I don\'t want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>';
             document.getElementById('results').classList.add('show');
             
             try {
@@ -537,7 +572,7 @@
                     </div>
                 `;
             } catch (error) {
-                resultGrid.innerHTML = `<p style="text-align: center; color: #dc3545;">Error: ${error.message}. Please try again.</p>`;
+                resultGrid.innerHTML = `<p style="text-align: center; color: #f87171;">Error: ${error.message}. Please try again.</p>`;
             }
             
             document.getElementById('results').classList.add('show');
