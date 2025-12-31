@@ -121,7 +121,7 @@
             letter-spacing: 0.01em;
         }
         
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             width: 100%;
             padding: 12px 14px;
             background: rgba(0, 0, 0, 0.4);
@@ -133,11 +133,26 @@
             transition: all 0.2s;
         }
         
-        input[type="number"]:focus {
+        input[type="number"]:focus, input[type="text"]:focus {
             outline: none;
             border-color: rgba(255, 255, 255, 0.4);
             background: rgba(0, 0, 0, 0.6);
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+        }
+        
+        .input-error {
+            border-color: rgba(248, 113, 113, 0.6) !important;
+        }
+        
+        .error-message {
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
         }
         
         .score-section {
@@ -365,11 +380,13 @@
                 <h2>Your Team</h2>
                 <div class="player">
                     <label for="player1">Your Rating</label>
-                    <input type="number" id="player1" step="0.001" min="0" max="6" placeholder="e.g., 4.267">
+                    <input type="text" id="player1" placeholder="4.267 or pickleball.com/players/name">
+                    <div class="error-message" id="player1-error"></div>
                 </div>
                 <div class="player">
                     <label for="player2">Partner's Rating</label>
-                    <input type="number" id="player2" step="0.001" min="0" max="6" placeholder="e.g., 3.631">
+                    <input type="text" id="player2" placeholder="3.631 or pickleball.com/players/name">
+                    <div class="error-message" id="player2-error"></div>
                 </div>
             </div>
             
@@ -377,11 +394,13 @@
                 <h2>Opponent Team</h2>
                 <div class="player">
                     <label for="opponent1">Opponent 1 Rating</label>
-                    <input type="number" id="opponent1" step="0.001" min="0" max="6" placeholder="e.g., 3.729">
+                    <input type="text" id="opponent1" placeholder="3.729 or pickleball.com/players/name">
+                    <div class="error-message" id="opponent1-error"></div>
                 </div>
                 <div class="player">
                     <label for="opponent2">Opponent 2 Rating</label>
-                    <input type="number" id="opponent2" step="0.001" min="0" max="6" placeholder="e.g., 4.005">
+                    <input type="text" id="opponent2" placeholder="4.005 or pickleball.com/players/name">
+                    <div class="error-message" id="opponent2-error"></div>
                 </div>
             </div>
         </div>
@@ -432,16 +451,134 @@
     </div>
     
     <script>
+        function isPickleballURL(str) {
+            return str.includes('pickleball.com/players/');
+        }
+        
+        function extractPlayerSlug(url) {
+            const match = url.match(/pickleball\.com\/players\/([\w-]+)/);
+            return match ? match[1] : null;
+        }
+        
+        function validateURL(url) {
+            try {
+                const slug = extractPlayerSlug(url);
+                return slug !== null;
+            } catch {
+                return false;
+            }
+        }
+        
+        function showError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            input.classList.add('input-error');
+            error.textContent = message;
+            error.classList.add('show');
+        }
+        
+        function clearError(fieldId) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + '-error');
+            input.classList.remove('input-error');
+            error.classList.remove('show');
+        }
+        
+        function clearAllErrors() {
+            ['player1', 'player2', 'opponent1', 'opponent2'].forEach(clearError);
+        }
+        
+        async function fetchDUPRFromURL(url) {
+            const apiUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8080/scrape_dupr'
+                : 'https://pickleball-dupr-predictor.onrender.com/scrape_dupr';
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url: url })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to fetch DUPR rating');
+            }
+            
+            const data = await response.json();
+            return data.dupr_rating;
+        }
+        
+        async function processInput(fieldId, value) {
+            clearError(fieldId);
+            
+            if (!value || value.trim() === '') {
+                showError(fieldId, 'This field is required');
+                return null;
+            }
+            
+            // Check if it's a URL
+            if (isPickleballURL(value)) {
+                if (!validateURL(value)) {
+                    showError(fieldId, 'Invalid pickleball.com URL format');
+                    return null;
+                }
+                
+                try {
+                    const rating = await fetchDUPRFromURL(value);
+                    return rating;
+                } catch (error) {
+                    showError(fieldId, error.message);
+                    return null;
+                }
+            }
+            
+            // Otherwise, try to parse as a number
+            const rating = parseFloat(value);
+            if (isNaN(rating)) {
+                showError(fieldId, 'Please enter a valid DUPR rating or pickleball.com URL');
+                return null;
+            }
+            
+            if (rating < 0 || rating > 8) {
+                showError(fieldId, 'DUPR rating must be between 0 and 8');
+                return null;
+            }
+            
+            return rating;
+        }
+        
         async function predictRatings() {
-            const player1 = parseFloat(document.getElementById('player1').value);
-            const player2 = parseFloat(document.getElementById('player2').value);
-            const opponent1 = parseFloat(document.getElementById('opponent1').value);
-            const opponent2 = parseFloat(document.getElementById('opponent2').value);
+            clearAllErrors();
+            
+            // Get raw values
+            const player1Input = document.getElementById('player1').value;
+            const player2Input = document.getElementById('player2').value;
+            const opponent1Input = document.getElementById('opponent1').value;
+            const opponent2Input = document.getElementById('opponent2').value;
             const yourScore = parseInt(document.getElementById('yourScore').value);
             const opponentScore = parseInt(document.getElementById('opponentScore').value);
             
-            if (isNaN(player1) || isNaN(player2) || isNaN(opponent1) || isNaN(opponent2) || isNaN(yourScore) || isNaN(opponentScore)) {
-                alert('Please fill in all fields with valid numbers');
+            // Show loading state early
+            const resultGrid = document.getElementById('resultGrid');
+            resultGrid.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5);">Processing player ratings...</p>';
+            document.getElementById('results').classList.add('show');
+            
+            // Process all inputs (including URL scraping if needed)
+            const player1 = await processInput('player1', player1Input);
+            const player2 = await processInput('player2', player2Input);
+            const opponent1 = await processInput('opponent1', opponent1Input);
+            const opponent2 = await processInput('opponent2', opponent2Input);
+            
+            if (player1 === null || player2 === null || opponent1 === null || opponent2 === null) {
+                resultGrid.innerHTML = '';
+                document.getElementById('results').classList.remove('show');
+                return;
+            }
+            
+            if (isNaN(yourScore) || isNaN(opponentScore)) {
+                alert('Please fill in match scores');
+                resultGrid.innerHTML = '';
+                document.getElementById('results').classList.remove('show');
                 return;
             }
             
@@ -468,7 +605,6 @@
             }
             
             // Show loading state
-            const resultGrid = document.getElementById('resultGrid');
             resultGrid.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model.<br><strong style="color: #ffffff;">NOTE:</strong> If it\'s your first request, it will probably take ~1 min because I don\'t want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>';
             document.getElementById('results').classList.add('show');
             
