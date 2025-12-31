@@ -82,26 +82,22 @@ def scrape_dupr():
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Extract DUPR rating from the rating history page
-        page_text = soup.get_text()
+        page_text = response.text
         
         # Extract player name from slug
         name_parts = player_slug.replace('-', ' ').title()
         
-        # Try multiple patterns to find the DUPR rating
-        # Pattern 1: Look for "Doubles ***** Singles **" which indicates the rating section
-        doubles_singles_match = re.search(r'Doubles\s+([\*\d\.]+)\s+Singles', page_text)
-        if doubles_singles_match:
-            rating_str = doubles_singles_match.group(1).replace('*', '')
-            # Now find the actual numeric rating nearby
-            rating_match = re.search(r'(\d+\.\d{3})', page_text[doubles_singles_match.start():doubles_singles_match.start()+200])
-            if rating_match:
-                dupr_rating = float(rating_match.group(1))
-                return jsonify({
-                    'dupr_rating': dupr_rating,
-                    'player_name': name_parts,
-                    'player_slug': player_slug,
-                    'source': 'rating_history'
-                })
+        # Try to extract from JSON data first (most reliable)
+        # Pattern 1: Look for currentDuprDoublesRating in JSON data
+        json_rating_match = re.search(r'"currentDuprDoublesRating":\s*([\d\.]+)', page_text)
+        if json_rating_match:
+            dupr_rating = float(json_rating_match.group(1))
+            return jsonify({
+                'dupr_rating': round(dupr_rating, 3),
+                'player_name': name_parts,
+                'player_slug': player_slug,
+                'source': 'json_data'
+            })
         
         # Pattern 2: Look for player name followed by rating in match history
         # Format: "Clayton Truex 34 | M | Kirkland, WA, USA 4.919"
