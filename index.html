@@ -80,6 +80,63 @@
             letter-spacing: 0.02em;
         }
         
+        .players-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.5);
+        }
+        
+        .players-tooltip .tooltip-content {
+            visibility: hidden;
+            width: 600px;
+            background: rgba(0, 0, 0, 0.95);
+            color: #ffffff;
+            text-align: left;
+            border-radius: 12px;
+            padding: 20px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -300px;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .players-tooltip .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
+        }
+        
+        .players-tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .player-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+            margin-top: 12px;
+        }
+        
+        .player-list li {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+        }
+        
         .teams {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -376,7 +433,46 @@
 <body>
     <div class="container">
         <h1>DUPR Rating Predictor</h1>
-        <p class="subtitle">Based on reverse-engineered algorithm from 1,711 matches (35 players)</p>
+        <p class="subtitle">Based on reverse-engineered algorithm from 1,711 matches (<span class="players-tooltip">35 players<span class="tooltip-content">
+            <strong>Players in Training Data:</strong>
+            <ul class="player-list">
+                <li>Jessica Wang</li>
+                <li>Linda Lang</li>
+                <li>Charlie Cannon</li>
+                <li>Justine Mangkornkeo</li>
+                <li>Luke Williams</li>
+                <li>Dena Quigley</li>
+                <li>Patricia Cayo</li>
+                <li>Amber Chong</li>
+                <li>Thomas Yu</li>
+                <li>Liam Meyer</li>
+                <li>Colby Bishop</li>
+                <li>Amanda Crain</li>
+                <li>Annelise Nguyen</li>
+                <li>Laura Pelton</li>
+                <li>Rob Evans</li>
+                <li>Madeline Welch</li>
+                <li>Michael Maldazys</li>
+                <li>Nicholas Button</li>
+                <li>Angie Cosma</li>
+                <li>Olivia Wisner</li>
+                <li>Aly Caliri</li>
+                <li>Jeri Saunders</li>
+                <li>Tammy Nolan</li>
+                <li>Pamela Liang</li>
+                <li>Sarah Jenson</li>
+                <li>Diana Hanks</li>
+                <li>Shannon Briggs</li>
+                <li>Chris Nguyen</li>
+                <li>Matt Gaffin</li>
+                <li>Adam Lavin</li>
+                <li>Ben Hanley</li>
+                <li>Brandon Freel</li>
+                <li>Rishi Patel</li>
+                <li>Travis Olson</li>
+                <li>Wei Shao</li>
+            </ul>
+        </span></span>)</p>
         
         <div class="teams">
             <div class="team">
