@@ -107,6 +107,7 @@
             backdrop-filter: blur(20px);
             font-size: 13px;
             line-height: 1.6;
+            pointer-events: none;
         }
         
         .players-tooltip .tooltip-content::after {
@@ -123,6 +124,7 @@
         .players-tooltip:hover .tooltip-content {
             visibility: visible;
             opacity: 1;
+            pointer-events: auto;
         }
         
         .player-list {
@@ -703,8 +705,24 @@
                 document.getElementById('model3').checked = true;
             }
             
-            // Show loading state
-            resultGrid.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model.<br><strong style="color: #ffffff;">NOTE:</strong> If it\'s your first request, it will probably take ~1 min because I don\'t want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>';
+            // Show loading state with timer
+            const resultGrid = document.getElementById('resultGrid');
+            const startTime = Date.now();
+            let timerInterval;
+            
+            function updateTimer() {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeStr = minutes > 0 
+                    ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+                    : `${seconds}s`;
+                    
+                resultGrid.innerHTML = `<p style="text-align: center; color: rgba(255, 255, 255, 0.5); line-height: 1.6;">Calculating ML model... <strong style="color: #4ade80;">${timeStr}</strong><br><strong style="color: #ffffff;">NOTE:</strong> If it's your first request, it will probably take ~1 min because I don't want to pay for the paid backend hosting tier but once you make your first request it should be much faster after that.</p>`;
+            }
+            
+            updateTimer(); // Initial call
+            timerInterval = setInterval(updateTimer, 1000);
             document.getElementById('results').classList.add('show');
             
             try {
@@ -736,6 +754,9 @@
                 }
                 
                 const data = await response.json();
+                
+                // Clear timer
+                clearInterval(timerInterval);
                 
                 // Update model info
                 document.getElementById('modelUsedText').textContent = modelReason;
@@ -807,6 +828,7 @@
                     </div>
                 `;
             } catch (error) {
+                clearInterval(timerInterval);
                 resultGrid.innerHTML = `<p style="text-align: center; color: #f87171;">Error: ${error.message}. Please try again.</p>`;
             }
             
@@ -822,6 +844,48 @@
             if (Math.abs(change) < 0.001) return 'change-neutral';
             return change > 0 ? 'change-positive' : 'change-negative';
         }
+        
+        function showLoadingMessage(fieldId, message) {
+            const error = document.getElementById(fieldId + '-error');
+            error.textContent = message;
+            error.style.color = 'rgba(255, 255, 255, 0.6)';
+            error.classList.add('show');
+        }
+        
+        async function handleInputChange(event) {
+            const fieldId = event.target.id;
+            const value = event.target.value.trim();
+            
+            // Check if it's a pickleball URL
+            if (isPickleballURL(value) && validateURL(value)) {
+                // Show loading message
+                showLoadingMessage(fieldId, 'Grabbing DUPR...');
+                
+                try {
+                    const rating = await fetchDUPRFromURL(value);
+                    // Replace the URL with the rating
+                    event.target.value = rating.toFixed(3);
+                    // Clear the loading message
+                    clearError(fieldId);
+                } catch (error) {
+                    showError(fieldId, error.message);
+                }
+            }
+        }
+        
+        // Add event listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            ['player1', 'player2', 'opponent1', 'opponent2'].forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                // Listen for paste events
+                input.addEventListener('paste', function(e) {
+                    // Use setTimeout to allow paste to complete
+                    setTimeout(() => handleInputChange(e), 10);
+                });
+                // Also listen for input changes (in case they type/edit)
+                input.addEventListener('blur', handleInputChange);
+            });
+        });
     </script>
 </body>
 </html>
